@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ShowTheWay</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="latitude_hint_string">Set Latitude</string>
+    <string name="longitude_hint_string">Set Longitude</string>
+</resources>
