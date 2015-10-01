@@ -2,19 +2,22 @@ package com.pum.tomasz.showtheway;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
+
+import com.pum.tomasz.showtheway.view.MyCompass;
 
 public class MainActivity extends ActionBarActivity {
+
+    private MyCompass compassView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
+
+        compassView = (MyCompass) findViewById(R.id.compass_view);
+
     }
 
 
@@ -38,4 +41,5 @@ public class MainActivity extends ActionBarActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
 }

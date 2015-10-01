@@ -6,7 +6,7 @@
     android:orientation="vertical">
 
 
-    <com.pum.tomasz.showtheway.MyCompass
+    <com.pum.tomasz.showtheway.view.MyCompass
         android:id="@+id/compass_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -39,6 +39,7 @@
             android:textSize="40sp"
             android:hint="@string/longitude_hint_string"
             android:layout_gravity="center_vertical"/>
+
 
     </LinearLayout>
 
