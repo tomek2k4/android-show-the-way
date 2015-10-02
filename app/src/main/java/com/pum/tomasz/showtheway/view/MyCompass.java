@@ -4,15 +4,17 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-
 import com.pum.tomasz.showtheway.engine.AzimuthChangeNotifier;
+import static com.pum.tomasz.showtheway.engine.AzimuthChangeNotifier.*;
+
 
 /**
  * Created by tomasz on 30.09.2015.
  */
-public class MyCompass extends View implements AzimuthChangeNotifier.AzimuthChangeListener{
+public class MyCompass extends View implements AzimuthChangeListener {
 
     private Paint circlePaint = new Paint();
     private Paint northTextPaint = new Paint();
@@ -40,7 +42,7 @@ public class MyCompass extends View implements AzimuthChangeNotifier.AzimuthChan
     }
 
     public MyCompass(Context context,AttributeSet attrs) {
-        super(context);
+        super(context,attrs);
 
         circlePaint.setColor(0x20000000);
         circlePaint.setStyle(Paint.Style.STROKE);
@@ -52,9 +54,20 @@ public class MyCompass extends View implements AzimuthChangeNotifier.AzimuthChan
         defaultTextPaint.setColor(0xFF000000);
         defaultTextPaint.setTextSize(30);
 
-        azimuthChangeNotifier = new AzimuthChangeNotifier();
-        azimuthChangeNotifier.setAzimuthChangeListener(this);
+        azimuthChangeNotifier = new AzimuthChangeNotifier(context);
+    }
 
+    public void open(){
+        Log.d("Tomek", "My compass has been opened");
+        azimuthChangeNotifier.registerAzimuthChangeListener(this);
+    }
+
+
+    public void close(){
+        Log.d("Tomek", "My compass has been closed");
+        if(azimuthChangeNotifier != null){
+            azimuthChangeNotifier.unregisterAzimuthChangeListener();
+        }
     }
 
     private void drawCompassRing(Canvas canvas){
@@ -91,20 +104,21 @@ public class MyCompass extends View implements AzimuthChangeNotifier.AzimuthChan
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
-                rotateAngle = (rotateAngle += 45) %360;
-                invalidate();
+//                rotateAngle = 300;//(rotateAngle += 45) %360;
+//                invalidate();
                 return true;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_OUTSIDE:
             case MotionEvent.ACTION_UP:
                 break;
         }
-
         return false;
     }
 
     @Override
-    public void onAzimuthChange(float azimuth) {
-        rotateAngle = azimuth;
+    public void onAzimuthChange(float rotateAngle) {
+        Log.d("Tomek", "Azimuth is: " + new Float(rotateAngle).toString());
+        rotateCompassRing(-rotateAngle);
+
     }
 }

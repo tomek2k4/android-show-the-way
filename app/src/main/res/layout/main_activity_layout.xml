@@ -25,7 +25,7 @@
             android:inputType="numberSigned|numberDecimal"
             android:ems="10"
             android:layout_weight="1"
-            android:textSize="40sp"
+            android:textSize="@dimen/edit_text_size"
             android:hint="@string/latitude_hint_string"
             android:layout_gravity="center_vertical"/>
 
@@ -36,7 +36,7 @@
             android:inputType="numberSigned|numberDecimal"
             android:ems="10"
             android:layout_weight="1"
-            android:textSize="40sp"
+            android:textSize="@dimen/edit_text_size"
             android:hint="@string/longitude_hint_string"
             android:layout_gravity="center_vertical"/>
 

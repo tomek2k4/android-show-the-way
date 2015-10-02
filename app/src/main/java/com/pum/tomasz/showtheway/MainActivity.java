@@ -9,7 +9,7 @@ import com.pum.tomasz.showtheway.view.MyCompass;
 
 public class MainActivity extends ActionBarActivity {
 
-    private MyCompass compassView;
+    private MyCompass compassView = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,6 +20,18 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        compassView.open();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        compassView.close();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

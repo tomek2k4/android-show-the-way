@@ -1,9 +1,11 @@
 package com.pum.tomasz.showtheway.engine;
 
+import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.util.Log;
 
 /**
  * Created by tomasz on 01.10.2015.
@@ -15,18 +17,34 @@ public class AzimuthChangeNotifier implements SensorEventListener {
     Sensor magnetometer;
     float[] mGravity;
     float[] mGeomagnetic;
-    float azimuth;
 
-    AzimuthChangeListener mAzimuthChangeListener;
+    AzimuthChangeListener mAzimuthChangeListener = null;
+
+    public AzimuthChangeNotifier(Context context) {
+
+        mSensorManager = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
+        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+    }
 
     public interface AzimuthChangeListener{
         public void onAzimuthChange(float azimuth);
     }
 
 
-    public void setAzimuthChangeListener(AzimuthChangeListener azimuthChangeListener){
+    public void registerAzimuthChangeListener(AzimuthChangeListener azimuthChangeListener){
         mAzimuthChangeListener = azimuthChangeListener;
+
+        mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
     }
+
+    public void unregisterAzimuthChangeListener(){
+        mSensorManager.unregisterListener(this);
+        mAzimuthChangeListener = null;
+    }
+
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -41,7 +59,15 @@ public class AzimuthChangeNotifier implements SensorEventListener {
             if (success) {
                 float orientation[] = new float[3];
                 SensorManager.getOrientation(R, orientation);
-                azimuth = orientation[0]; // orientation contains: azimut, pitch and roll
+                float azimuth = orientation[0]; // orientation contains: azimut, pitch and roll
+
+                if(mAzimuthChangeListener!=null){
+                    Log.d("Tomek", "Update azimuth change");
+                    //convert to deegrees
+                    azimuth = (float) (azimuth*180/Math.PI); // output range is from -180 to 180;
+                    //azimuth = (float) (-azimuth*360/(2*Math.PI));
+                    mAzimuthChangeListener.onAzimuthChange(azimuth);
+                }
             }
         }
 
