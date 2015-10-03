@@ -2,12 +2,21 @@ package com.pum.tomasz.showtheway;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
 
-public class MainActivity extends ActionBarActivity {
+import com.pum.tomasz.showtheway.data.DestinationLocation;
 
-    private MyCompass compassView = null;
+public class MainActivity extends ActionBarActivity implements View.OnTouchListener{
+
+    private MyCompass compassView;
+    private EditText latitudeEditText;
+    private EditText longitudeEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -15,9 +24,11 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.main_activity_layout);
 
         compassView = (MyCompass) findViewById(R.id.compass_view);
+        compassView.setOnTouchListener(this);
 
+        latitudeEditText = (EditText) findViewById(R.id.latitude_edit_text);
+        longitudeEditText = (EditText) findViewById(R.id.longitude_edit_text);
     }
-
 
     @Override
     protected void onResume() {
@@ -29,6 +40,30 @@ public class MainActivity extends ActionBarActivity {
     protected void onPause() {
         super.onPause();
         compassView.close();
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch (event.getAction()){
+            case MotionEvent.ACTION_DOWN:
+                Log.d("Tomek", "On touch event called");
+                try {
+                    float latitude = new Float( latitudeEditText.getText().toString());
+                    float longitude = new Float(longitudeEditText.getText().toString());
+
+                    compassView.setDestinationLocation(new DestinationLocation(latitude,longitude));
+                }catch (NumberFormatException e){
+                    Log.d("Tomek","Wrong value formatting");
+                    Toast.makeText(this, R.string.new_msg_wrong_value_format,
+                            Toast.LENGTH_LONG).show();
+                }
+                return true;
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_OUTSIDE:
+            case MotionEvent.ACTION_UP:
+                break;
+        }
+        return false;
     }
 
     @Override
@@ -51,5 +86,4 @@ public class MainActivity extends ActionBarActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
 }

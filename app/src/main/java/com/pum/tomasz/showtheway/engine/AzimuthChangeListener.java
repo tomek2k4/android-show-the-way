@@ -1,5 +1,7 @@
 package com.pum.tomasz.showtheway.engine;
 
+import com.pum.tomasz.showtheway.data.AzimuthData;
+
 /**
  * Created by tomasz on 03.10.2015.
  */

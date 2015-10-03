@@ -5,7 +5,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.util.Log;
+
+import com.pum.tomasz.showtheway.data.AzimuthData;
+import com.pum.tomasz.showtheway.data.AzimuthSourceEnum;
 
 /**
  * Created by tomasz on 01.10.2015.

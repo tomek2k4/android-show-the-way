@@ -5,11 +5,11 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 
+import com.pum.tomasz.showtheway.data.DestinationLocation;
 import com.pum.tomasz.showtheway.engine.AzimuthChangeListener;
-import com.pum.tomasz.showtheway.engine.AzimuthData;
+import com.pum.tomasz.showtheway.data.AzimuthData;
 import com.pum.tomasz.showtheway.engine.GeoAzimuthChangeNotifier;
 import com.pum.tomasz.showtheway.engine.LocationAzimuthManager;
 
@@ -28,8 +28,8 @@ public class MyCompass extends View implements AzimuthChangeListener {
     private GeoAzimuthChangeNotifier geoAzimuthChangeNotifier;
     private LocationAzimuthManager locationAzimuthManager;
 
-
     private float rotateAngle = 0;
+    private float directionAngle = 0;
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -39,8 +39,9 @@ public class MyCompass extends View implements AzimuthChangeListener {
         canvasWidth = canvas.getHeight();
 
         canvas.save();
-        canvas.rotate(rotateAngle, canvasHeight /2, canvasWidth /2);
+        canvas.rotate(rotateAngle, canvasHeight / 2, canvasWidth / 2);
         drawCompassRing(canvas);
+        drawDirectionVector(canvas);
         canvas.restore();
 
     }
@@ -65,8 +66,16 @@ public class MyCompass extends View implements AzimuthChangeListener {
     public void open(){
         Log.d("Tomek", "My compass has been opened");
         geoAzimuthChangeNotifier.registerAzimuthChangeListener(this);
+        locationAzimuthManager.setmAzimuthChangeListener(this);
         locationAzimuthManager.activate();
     }
+
+    public void setDestinationLocation(DestinationLocation destLocation) {
+        if(locationAzimuthManager!=null){
+            locationAzimuthManager.setDestinationLocation(destLocation);
+        }
+    }
+
 
 
     public void close(){
@@ -107,26 +116,27 @@ public class MyCompass extends View implements AzimuthChangeListener {
         invalidate();
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction()){
-            case MotionEvent.ACTION_DOWN:
-//                rotateAngle = 300;//(rotateAngle += 45) %360;
-//                invalidate();
-                return true;
-            case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_OUTSIDE:
-            case MotionEvent.ACTION_UP:
-                break;
-        }
-        return false;
+    private void updateDirection(float angle) {
+        directionAngle = angle;
+        invalidate();
     }
+
+    private void drawDirectionVector(Canvas canvas) {
+    }
+
 
     @Override
     public synchronized void onAzimuthChange(AzimuthData azimuthData) {
         Log.d("Tomek", "Azimuth from " + azimuthData.getAzimuthSourceEnum().name().toString()
                 + " source is:" + new Float(azimuthData.getAzimuth()).toString());
-        rotateCompassRing(-azimuthData.getAzimuth());
-
+        switch (azimuthData.getAzimuthSourceEnum()){
+            case GEOMAGNETIC:
+                rotateCompassRing(-azimuthData.getAzimuth());
+                break;
+            case LOCATION:
+                updateDirection(azimuthData.getAzimuth());
+                break;
+        }
     }
+
 }
