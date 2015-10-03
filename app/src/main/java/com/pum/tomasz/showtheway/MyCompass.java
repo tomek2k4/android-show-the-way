@@ -1,4 +1,4 @@
-package com.pum.tomasz.showtheway.view;
+package com.pum.tomasz.showtheway;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -7,8 +7,11 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import com.pum.tomasz.showtheway.engine.AzimuthChangeNotifier;
-import static com.pum.tomasz.showtheway.engine.AzimuthChangeNotifier.*;
+
+import com.pum.tomasz.showtheway.engine.AzimuthChangeListener;
+import com.pum.tomasz.showtheway.engine.AzimuthData;
+import com.pum.tomasz.showtheway.engine.GeoAzimuthChangeNotifier;
+import com.pum.tomasz.showtheway.engine.LocationAzimuthManager;
 
 
 /**
@@ -22,7 +25,8 @@ public class MyCompass extends View implements AzimuthChangeListener {
     private int   canvasHeight;
     private int   canvasWidth;
 
-    private AzimuthChangeNotifier azimuthChangeNotifier;
+    private GeoAzimuthChangeNotifier geoAzimuthChangeNotifier;
+    private LocationAzimuthManager locationAzimuthManager;
 
 
     private float rotateAngle = 0;
@@ -54,20 +58,23 @@ public class MyCompass extends View implements AzimuthChangeListener {
         defaultTextPaint.setColor(0xFF000000);
         defaultTextPaint.setTextSize(30);
 
-        azimuthChangeNotifier = new AzimuthChangeNotifier(context);
+        geoAzimuthChangeNotifier = new GeoAzimuthChangeNotifier(context);
+        locationAzimuthManager = new LocationAzimuthManager(context);
     }
 
     public void open(){
         Log.d("Tomek", "My compass has been opened");
-        azimuthChangeNotifier.registerAzimuthChangeListener(this);
+        geoAzimuthChangeNotifier.registerAzimuthChangeListener(this);
+        locationAzimuthManager.activate();
     }
 
 
     public void close(){
         Log.d("Tomek", "My compass has been closed");
-        if(azimuthChangeNotifier != null){
-            azimuthChangeNotifier.unregisterAzimuthChangeListener();
+        if(geoAzimuthChangeNotifier != null){
+            geoAzimuthChangeNotifier.unregisterAzimuthChangeListener();
         }
+        locationAzimuthManager.deactivate();
     }
 
     private void drawCompassRing(Canvas canvas){
@@ -116,9 +123,10 @@ public class MyCompass extends View implements AzimuthChangeListener {
     }
 
     @Override
-    public void onAzimuthChange(float rotateAngle) {
-        Log.d("Tomek", "Azimuth is: " + new Float(rotateAngle).toString());
-        rotateCompassRing(-rotateAngle);
+    public synchronized void onAzimuthChange(AzimuthData azimuthData) {
+        Log.d("Tomek", "Azimuth from " + azimuthData.getAzimuthSourceEnum().name().toString()
+                + " source is:" + new Float(azimuthData.getAzimuth()).toString());
+        rotateCompassRing(-azimuthData.getAzimuth());
 
     }
 }

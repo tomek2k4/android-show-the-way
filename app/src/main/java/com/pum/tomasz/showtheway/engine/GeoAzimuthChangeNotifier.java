@@ -10,7 +10,7 @@ import android.util.Log;
 /**
  * Created by tomasz on 01.10.2015.
  */
-public class AzimuthChangeNotifier implements SensorEventListener {
+public class GeoAzimuthChangeNotifier implements SensorEventListener {
 
     private SensorManager mSensorManager;
     Sensor accelerometer;
@@ -20,18 +20,13 @@ public class AzimuthChangeNotifier implements SensorEventListener {
 
     AzimuthChangeListener mAzimuthChangeListener = null;
 
-    public AzimuthChangeNotifier(Context context) {
+    public GeoAzimuthChangeNotifier(Context context) {
 
         mSensorManager = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
         accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
     }
-
-    public interface AzimuthChangeListener{
-        public void onAzimuthChange(float azimuth);
-    }
-
 
     public void registerAzimuthChangeListener(AzimuthChangeListener azimuthChangeListener){
         mAzimuthChangeListener = azimuthChangeListener;
@@ -62,11 +57,9 @@ public class AzimuthChangeNotifier implements SensorEventListener {
                 float azimuth = orientation[0]; // orientation contains: azimut, pitch and roll
 
                 if(mAzimuthChangeListener!=null){
-                    Log.d("Tomek", "Update azimuth change");
                     //convert to deegrees
                     azimuth = (float) (azimuth*180/Math.PI); // output range is from -180 to 180;
-                    //azimuth = (float) (-azimuth*360/(2*Math.PI));
-                    mAzimuthChangeListener.onAzimuthChange(azimuth);
+                    mAzimuthChangeListener.onAzimuthChange(new AzimuthData(AzimuthSourceEnum.GEOMAGNETIC,azimuth));
                 }
             }
         }
