@@ -27,7 +27,8 @@
             android:layout_weight="1"
             android:textSize="@dimen/edit_text_size"
             android:hint="@string/latitude_hint_string"
-            android:layout_gravity="center_vertical"/>
+            android:gravity="bottom"
+            />
 
         <EditText
             android:id="@+id/longitude_edit_text"
@@ -38,7 +39,8 @@
             android:layout_weight="1"
             android:textSize="@dimen/edit_text_size"
             android:hint="@string/longitude_hint_string"
-            android:layout_gravity="center_vertical"/>
+            android:gravity="bottom"
+            />
 
 
     </LinearLayout>

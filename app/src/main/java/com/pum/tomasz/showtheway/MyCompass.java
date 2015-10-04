@@ -3,6 +3,8 @@ package com.pum.tomasz.showtheway;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.Point;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -19,9 +21,11 @@ import com.pum.tomasz.showtheway.engine.LocationAzimuthManager;
  */
 public class MyCompass extends View implements AzimuthChangeListener {
 
-    private Paint circlePaint = new Paint();
+    private Paint circlePaintFilled = new Paint();
+    private Paint circlePaintStroke = new Paint();
     private Paint northTextPaint = new Paint();
     private Paint defaultTextPaint = new Paint();
+    private Paint directionVectorPaint = new Paint();
     private int   canvasHeight;
     private int   canvasWidth;
 
@@ -29,7 +33,11 @@ public class MyCompass extends View implements AzimuthChangeListener {
     private LocationAzimuthManager locationAzimuthManager;
 
     private float rotateAngle = 0;
-    private float directionAngle = 0;
+    private Float directionAngle = null;
+    private int canvasMaxDim;
+    private int circleRadius;
+    private int x0;
+    private int y0;
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -37,27 +45,45 @@ public class MyCompass extends View implements AzimuthChangeListener {
 
         canvasHeight = canvas.getWidth();
         canvasWidth = canvas.getHeight();
+        canvasMaxDim = (canvasHeight < canvasWidth)? canvasHeight : canvasWidth;
+
+        circleRadius = canvasMaxDim /3;
+        x0 = canvasHeight /2;
+        y0 = canvasWidth /2;
 
         canvas.save();
         canvas.rotate(rotateAngle, canvasHeight / 2, canvasWidth / 2);
+        if(directionAngle!=null) {
+            drawDirectionVector(canvas);
+        }
         drawCompassRing(canvas);
-        drawDirectionVector(canvas);
         canvas.restore();
 
     }
 
     public MyCompass(Context context,AttributeSet attrs) {
-        super(context,attrs);
+        super(context, attrs);
 
-        circlePaint.setColor(0x20000000);
-        circlePaint.setStyle(Paint.Style.STROKE);
-        circlePaint.setStrokeWidth(3);
+        circlePaintFilled.setColor(0xFFCCCCCC);
+        circlePaintFilled.setStyle(Paint.Style.STROKE);
+        circlePaintFilled.setStrokeWidth(3);
+        circlePaintFilled.setStyle(Paint.Style.FILL_AND_STROKE);
+
+        circlePaintStroke.setColor(0xFF8F8F8F);
+        circlePaintStroke.setStyle(Paint.Style.STROKE);
+        circlePaintStroke.setStrokeWidth(2);
 
         northTextPaint.setColor(0xFFFF0000);
         northTextPaint.setTextSize(30);
 
         defaultTextPaint.setColor(0xFF000000);
         defaultTextPaint.setTextSize(30);
+
+        directionVectorPaint.setColor(0x8F000066);
+        directionVectorPaint.setStyle(Paint.Style.FILL);
+        directionVectorPaint.setStrokeWidth(2);
+        directionVectorPaint.setAntiAlias(true);
+
 
         geoAzimuthChangeNotifier = new GeoAzimuthChangeNotifier(context);
         locationAzimuthManager = new LocationAzimuthManager(context);
@@ -77,7 +103,6 @@ public class MyCompass extends View implements AzimuthChangeListener {
     }
 
 
-
     public void close(){
         Log.d("Tomek", "My compass has been closed");
         if(geoAzimuthChangeNotifier != null){
@@ -87,28 +112,49 @@ public class MyCompass extends View implements AzimuthChangeListener {
     }
 
     private void drawCompassRing(Canvas canvas){
-        final int S = (canvasHeight < canvasWidth)? canvasHeight : canvasWidth;
 
-        final int R = S/3;
-        final int x0 = canvasHeight /2;
-        final int y0 = canvasWidth /2;
-
-        final int armHourLength = 2*R/3;
-        final int armMinuteLength = R-R/5;
-        final int armSecondLength = R-R/6;
-        final int textMargin = R/12;
+        final int textMargin = circleRadius /12;
 
         //Draw main circle
-        canvas.drawCircle(x0, y0, R, circlePaint);
+        canvas.drawCircle(x0, y0, circleRadius, circlePaintFilled);
+        canvas.drawCircle(x0, y0, circleRadius, circlePaintStroke);
 
         //Draw Sides texts
         float deltaAngleWorldSides = 2*(float)Math.PI / 4;
 
-        canvas.drawText("N", x0, y0 - R - textMargin / 2, northTextPaint);
-        canvas.drawText("W", (float) (x0 - R - 1.5 * textMargin), y0, defaultTextPaint);
-        canvas.drawText("E", x0 + R + textMargin / 2, y0, defaultTextPaint);
-        canvas.drawText("S", x0, (float) (y0 + R + 1.5 * textMargin), defaultTextPaint);
+        canvas.drawText("N", x0, y0 - circleRadius - textMargin / 2, northTextPaint);
+        canvas.drawText("W", (float) (x0 - circleRadius - 1.5 * textMargin), y0, defaultTextPaint);
+        canvas.drawText("E", x0 + circleRadius + textMargin / 2, y0, defaultTextPaint);
+        canvas.drawText("S", x0, (float) (y0 + circleRadius + 1.5 * textMargin), defaultTextPaint);
     }
+
+
+    private void drawDirectionVector(Canvas canvas) {
+
+        final int vectorLength = circleRadius/5;
+
+        float alpha = (float) (directionAngle/Math.PI);
+
+        float delta = (float) (Math.PI/12);
+        float beta = (float) (alpha - delta);
+        float gamma = (float) (alpha + delta);
+
+        Point a = new Point((int) (x0 + (circleRadius * Math.sin(beta))),(int) (y0 - (circleRadius * Math.cos(beta))));
+        Point b = new Point((int) (x0 + (circleRadius * Math.sin(gamma))), (int) (y0 - (circleRadius * Math.cos(gamma))));
+        Point c = new Point((int)( x0 + ((circleRadius+vectorLength) * Math.sin(alpha))), (int)(y0 - ((circleRadius+vectorLength) * Math.cos(alpha))));
+
+        Path path = new Path();
+        path.setFillType(Path.FillType.EVEN_ODD);
+        path.moveTo(b.x, b.y);
+        path.lineTo(c.x, c.y);
+        path.lineTo(a.x, a.y);
+        path.close();
+
+        canvas.drawPath(path, directionVectorPaint);
+
+
+    }
+
 
 
     public void rotateCompassRing(float angle){
@@ -120,10 +166,6 @@ public class MyCompass extends View implements AzimuthChangeListener {
         directionAngle = angle;
         invalidate();
     }
-
-    private void drawDirectionVector(Canvas canvas) {
-    }
-
 
     @Override
     public synchronized void onAzimuthChange(AzimuthData azimuthData) {
