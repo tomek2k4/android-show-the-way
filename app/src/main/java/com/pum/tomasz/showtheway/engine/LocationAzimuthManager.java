@@ -15,6 +15,8 @@ import com.pum.tomasz.showtheway.data.AzimuthData;
 import com.pum.tomasz.showtheway.data.AzimuthSourceEnum;
 import com.pum.tomasz.showtheway.data.DestinationLocation;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * Created by tomasz on 03.10.2015.
  */
@@ -33,6 +35,7 @@ public class LocationAzimuthManager{
 
     private AzimuthChangeListener mAzimuthChangeListener = null;
     private DestinationLocation destinationLocation;
+    private ReentrantLock lock = new ReentrantLock();
 
 
     public LocationAzimuthManager(Context context) {
@@ -80,7 +83,7 @@ public class LocationAzimuthManager{
         @Override
         public void handleMessage(Message msg) {
             Log.d("Tomek", "Received calculated location azimuth message on thread: " +
-                    new Long(Thread.currentThread().getId()).toString());
+                    Long.valueOf(Thread.currentThread().getId()).toString());
 
 
             switch (msg.what) {
@@ -110,15 +113,25 @@ public class LocationAzimuthManager{
 
         @Override
         public void onLocationChanged(Location location) {
-            Log.d("Tomek","Received new location: "+ location.getLatitude() + " "+ location.getLongitude() +
-            "on thread: " + new Long(Thread.currentThread().getId()).toString());
+            Log.d("Tomek", "Received new location: " + location.getLatitude() + " " + location.getLongitude() +
+                    "on thread: " + Long.valueOf(Thread.currentThread().getId()).toString());
 
-            float azimuth = 45;
-
+            float azimuth;
+            AzimuthData azimuthData;
+            lock.lock();
+            try {
+                if(destinationLocation!=null){
+                    azimuthData = calculateDestinationAzimuth(location,destinationLocation);
+                }else{
+                    azimuthData = new AzimuthData(AzimuthSourceEnum.NULL,0);
+                }
+            }finally {
+                lock.unlock();
+            }
             // since we cannot update the UI from a non-UI thread,
             // we'll send the result to the azimuthResponseHandler (defined above)
             Message message = LocationAzimuthManager.this.azimuthResponseHandler
-                    .obtainMessage(CALCULATED_AZIMUTH_MESSAGE_ID,new AzimuthData(AzimuthSourceEnum.LOCATION,azimuth));
+                    .obtainMessage(CALCULATED_AZIMUTH_MESSAGE_ID,azimuthData);
             LocationAzimuthManager.this.azimuthResponseHandler.sendMessage(message);
 
         }
@@ -137,6 +150,54 @@ public class LocationAzimuthManager{
         public void onProviderDisabled(String provider) {
 
         }
+    }
+
+
+    private AzimuthData calculateDestinationAzimuth(Location currentLocation,DestinationLocation destLocation) {
+
+        AzimuthData azimuthData = null;
+        float azimuth = 0;
+
+
+        Location destLoc = new Location("dest");
+        destLoc.setLatitude(destLocation.getLatitude());
+        destLoc.setLongitude(destLocation.getLongitude());
+
+        float distance = currentLocation.distanceTo(destLoc);
+        //Check if we arrived on destination
+        if (distance < LOCATION_UPDTE_MIN_DISTANCE) {
+            azimuthData = new AzimuthData(AzimuthSourceEnum.ARRIVED, 0);
+            return azimuthData;
+        }
+
+        // normalize to beginning axis
+        float x = (float) (destLocation.getLongitude() - currentLocation.getLongitude());
+        float y = (float) (destLocation.getLatitude() - currentLocation.getLatitude());
+
+        // check border conditions
+        if (x==0 && y > 0){
+            return new AzimuthData(AzimuthSourceEnum.LOCATION, 0);
+        }
+        if(x==0 && y<0){
+            return new AzimuthData(AzimuthSourceEnum.LOCATION, 180);
+        }
+        if(y==0 && x > 0 ){
+            return new AzimuthData(AzimuthSourceEnum.LOCATION, 90);
+        }
+        if(y==0 && x < 0 ){
+            return new AzimuthData(AzimuthSourceEnum.LOCATION, -90);
+        }
+
+        // First quarter of xy axis
+        //if( x>0 && y>0 ){
+            azimuth = (float) (Math.atan2(Math.abs(y),Math.abs(x)));
+        //}
+
+        //convert to degrees
+        azimuth = (float) Math.toDegrees(azimuth);
+
+
+        return new AzimuthData(AzimuthSourceEnum.LOCATION, azimuth);
     }
 
 }

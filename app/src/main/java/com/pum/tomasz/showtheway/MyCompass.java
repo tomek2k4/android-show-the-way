@@ -114,6 +114,7 @@ public class MyCompass extends View implements AzimuthChangeListener {
     private void drawCompassRing(Canvas canvas){
 
         final int textMargin = circleRadius /12;
+        final int textSize = (int) getResources().getDimension(R.dimen.edit_text_size);
 
         //Draw main circle
         canvas.drawCircle(x0, y0, circleRadius, circlePaintFilled);
@@ -122,10 +123,10 @@ public class MyCompass extends View implements AzimuthChangeListener {
         //Draw Sides texts
         float deltaAngleWorldSides = 2*(float)Math.PI / 4;
 
-        canvas.drawText("N", x0, y0 - circleRadius - textMargin / 2, northTextPaint);
-        canvas.drawText("W", (float) (x0 - circleRadius - 1.5 * textMargin), y0, defaultTextPaint);
-        canvas.drawText("E", x0 + circleRadius + textMargin / 2, y0, defaultTextPaint);
-        canvas.drawText("S", x0, (float) (y0 + circleRadius + 1.5 * textMargin), defaultTextPaint);
+        canvas.drawText("N", x0 - textSize/2, y0 - circleRadius - textMargin / 2, northTextPaint);
+        canvas.drawText("W", (float) (x0 - circleRadius - 1.5 * textMargin), y0 + textSize/2, defaultTextPaint);
+        canvas.drawText("E", x0 + circleRadius + textMargin / 2, y0 + textSize / 2, defaultTextPaint);
+        canvas.drawText("S", x0 - textSize / 2, (float) (y0 + circleRadius + 1.5 * textMargin), defaultTextPaint);
     }
 
 
@@ -133,7 +134,7 @@ public class MyCompass extends View implements AzimuthChangeListener {
 
         final int vectorLength = circleRadius/5;
 
-        float alpha = (float) (directionAngle/Math.PI);
+        float alpha = (float) ( Math.PI * directionAngle/180);
 
         float delta = (float) (Math.PI/12);
         float beta = (float) (alpha - delta);
@@ -167,6 +168,10 @@ public class MyCompass extends View implements AzimuthChangeListener {
         invalidate();
     }
 
+    private void notifyArrived() {
+        Log.d("Tomek","Arrived to destination");
+    }
+
     @Override
     public synchronized void onAzimuthChange(AzimuthData azimuthData) {
         Log.d("Tomek", "Azimuth from " + azimuthData.getAzimuthSourceEnum().name().toString()
@@ -178,7 +183,13 @@ public class MyCompass extends View implements AzimuthChangeListener {
             case LOCATION:
                 updateDirection(azimuthData.getAzimuth());
                 break;
+            case ARRIVED:
+                notifyArrived();
+                break;
+            case NULL:
+                directionAngle = null;
+                invalidate();
+                break;
         }
     }
-
 }
