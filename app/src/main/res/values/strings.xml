@@ -6,4 +6,5 @@
     <string name="latitude_hint_string">Set Latitude</string>
     <string name="longitude_hint_string">Set Longitude</string>
     <string name="new_msg_wrong_value_format">Please enter proper signed decimal number</string>
+    <string name="arrived_text">You\'ve arrived at your destination</string>
 </resources>

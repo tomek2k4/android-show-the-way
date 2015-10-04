@@ -34,7 +34,7 @@ public class LocationAzimuthManager{
     private LocationUpdatesHandlerThread locationUpdatesHandlerThread = null;
 
     private AzimuthChangeListener mAzimuthChangeListener = null;
-    private DestinationLocation destinationLocation;
+    private DestinationLocation destinationLocation = new DestinationLocation(50f,50f);
     private ReentrantLock lock = new ReentrantLock();
 
 
@@ -114,7 +114,7 @@ public class LocationAzimuthManager{
         @Override
         public void onLocationChanged(Location location) {
             Log.d("Tomek", "Received new location: " + location.getLatitude() + " " + location.getLongitude() +
-                    "on thread: " + Long.valueOf(Thread.currentThread().getId()).toString());
+                    " on thread: " + Long.valueOf(Thread.currentThread().getId()).toString());
 
             float azimuth;
             AzimuthData azimuthData;
@@ -171,31 +171,16 @@ public class LocationAzimuthManager{
         }
 
         // normalize to beginning axis
-        float x = (float) (destLocation.getLongitude() - currentLocation.getLongitude());
         float y = (float) (destLocation.getLatitude() - currentLocation.getLatitude());
+        float x = (float) (destLocation.getLongitude() - currentLocation.getLongitude());
 
-        // check border conditions
-        if (x==0 && y > 0){
-            return new AzimuthData(AzimuthSourceEnum.LOCATION, 0);
-        }
-        if(x==0 && y<0){
-            return new AzimuthData(AzimuthSourceEnum.LOCATION, 180);
-        }
-        if(y==0 && x > 0 ){
-            return new AzimuthData(AzimuthSourceEnum.LOCATION, 90);
-        }
-        if(y==0 && x < 0 ){
-            return new AzimuthData(AzimuthSourceEnum.LOCATION, -90);
-        }
-
-        // First quarter of xy axis
-        //if( x>0 && y>0 ){
-            azimuth = (float) (Math.atan2(Math.abs(y),Math.abs(x)));
-        //}
-
+        // Output of atan2 will return the counter-clock wise angle with respect to X-axis in range -pi to pi
+        // In our case longitude is x axis and latitude is y axis.
+        // Geo azimuth is angle in respect to north base line and counted clockwise, so we have to
+        // negate output to be clockwise and add 90 degrees to get respect to Y-axis
+        azimuth = (float)((Math.PI/2)-Math.atan2(y,x));
         //convert to degrees
-        azimuth = (float) Math.toDegrees(azimuth);
-
+        azimuth = (float) (180f*(azimuth/Math.PI));
 
         return new AzimuthData(AzimuthSourceEnum.LOCATION, azimuth);
     }

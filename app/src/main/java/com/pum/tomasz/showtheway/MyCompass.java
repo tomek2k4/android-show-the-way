@@ -8,6 +8,7 @@ import android.graphics.Point;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.pum.tomasz.showtheway.data.DestinationLocation;
 import com.pum.tomasz.showtheway.engine.AzimuthChangeListener;
@@ -32,12 +33,20 @@ public class MyCompass extends View implements AzimuthChangeListener {
     private GeoAzimuthChangeNotifier geoAzimuthChangeNotifier;
     private LocationAzimuthManager locationAzimuthManager;
 
-    private float rotateAngle = 0;
-    private Float directionAngle = null;
     private int canvasMaxDim;
     private int circleRadius;
     private int x0;
     private int y0;
+
+    private float rotateAngle = 0;
+    private Float directionAngle = null;
+    private boolean arrived = false;
+
+    public void setArrived(boolean arrived) {
+        this.arrived = arrived;
+    }
+
+
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -56,12 +65,18 @@ public class MyCompass extends View implements AzimuthChangeListener {
         if(directionAngle!=null) {
             drawDirectionVector(canvas);
         }
+        if(arrived){
+            circlePaintFilled.setColor(0xFF336600);
+        }else
+        {
+            circlePaintFilled.setColor(0xFFCCCCCC);
+        }
         drawCompassRing(canvas);
         canvas.restore();
 
     }
 
-    public MyCompass(Context context,AttributeSet attrs) {
+    public MyCompass(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         circlePaintFilled.setColor(0xFFCCCCCC);
@@ -170,6 +185,10 @@ public class MyCompass extends View implements AzimuthChangeListener {
 
     private void notifyArrived() {
         Log.d("Tomek","Arrived to destination");
+        setArrived(true);
+        Toast.makeText(getContext(), R.string.arrived_text,
+                Toast.LENGTH_LONG).show();
+        invalidate();
     }
 
     @Override
@@ -181,12 +200,14 @@ public class MyCompass extends View implements AzimuthChangeListener {
                 rotateCompassRing(-azimuthData.getAzimuth());
                 break;
             case LOCATION:
+                setArrived(false);
                 updateDirection(azimuthData.getAzimuth());
                 break;
             case ARRIVED:
                 notifyArrived();
                 break;
             case NULL:
+                setArrived(false);
                 directionAngle = null;
                 invalidate();
                 break;
