@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.pum.tomasz.showtheway.data.AzimuthData;
 import com.pum.tomasz.showtheway.data.AzimuthSourceEnum;
@@ -20,20 +21,20 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by tomasz on 03.10.2015.
  */
-public class LocationAzimuthManager{
+public class LocationAzimuthManager extends AzimuthNotifier{
 
     public static final int LOCATION_UPDTE_MIN_DISTANCE = 1; //in metres
     private final static String LOCATION_PROVIDER = LocationManager.GPS_PROVIDER;
 
     // the id of a message to our response handler
     private static final int CALCULATED_AZIMUTH_MESSAGE_ID = 1;
+    private static final int LOCATION_PROVIDER_OFF_ID = 2;
 
     private Context context = null;
     LocationManager locationManager = null;
     private MyLocationListener locationListener = null;
     private LocationUpdatesHandlerThread locationUpdatesHandlerThread = null;
 
-    private AzimuthChangeListener mAzimuthChangeListener = null;
     private Location destinationLocation = null;
     private ReentrantLock lock = new ReentrantLock();
 
@@ -48,12 +49,13 @@ public class LocationAzimuthManager{
         // instantiate Listener to receive Location events
         locationListener = new MyLocationListener();
 
-        // instantiate HandlerThread to be responsible for handling new location
+        // instantiate HandlerThread to be responsible for handling new location and destination
         // that way UI thread won't be slowed down by azimuth calculation
         locationUpdatesHandlerThread = new LocationUpdatesHandlerThread("LocationWorkerThread");
 
         //Start the thread
         locationUpdatesHandlerThread.start();
+        locationUpdatesHandlerThread.prepareHandler();
 
         // requests location updates triggerred by distance travelled from last point
         locationManager.requestLocationUpdates(LOCATION_PROVIDER, 0, LOCATION_UPDTE_MIN_DISTANCE,
@@ -71,11 +73,6 @@ public class LocationAzimuthManager{
         //null members
         locationListener = null;
         locationUpdatesHandlerThread = null;
-        mAzimuthChangeListener = null;
-    }
-
-    public void setmAzimuthChangeListener(AzimuthChangeListener azimuthChangeListener){
-        mAzimuthChangeListener = azimuthChangeListener;
     }
 
 
@@ -89,7 +86,10 @@ public class LocationAzimuthManager{
             switch (msg.what) {
                 case CALCULATED_AZIMUTH_MESSAGE_ID:
                     Log.d("Tomek", "Handling response");
-                    mAzimuthChangeListener.onAzimuthChange((AzimuthData) msg.obj);
+                    getAzimuthChangeListener().onAzimuthChange((AzimuthData) msg.obj);
+                    break;
+                case LOCATION_PROVIDER_OFF_ID:
+                    Toast.makeText(context,"Turn on GPS",Toast.LENGTH_LONG).show();
                     break;
             }
 
@@ -107,27 +107,47 @@ public class LocationAzimuthManager{
             lock.unlock();
         }
 
-        AzimuthData azimuthData = calculateDestinationAzimuth(locationManager.getLastKnownLocation(LOCATION_PROVIDER),destLocation);
-        azimuthData.setAzimuthSourceEnum(AzimuthSourceEnum.NEW_DESTINATION);
-
-        Message message = LocationAzimuthManager.this.azimuthResponseHandler
-                .obtainMessage(CALCULATED_AZIMUTH_MESSAGE_ID,azimuthData);
-        LocationAzimuthManager.this.azimuthResponseHandler.sendMessage(message);
+        // delegate equating azimuth after destination change to lacation handler thread
+        locationUpdatesHandlerThread.postTask(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    Location lastKnownLocation = locationManager.getLastKnownLocation(LOCATION_PROVIDER);
+                    locationListener.onLocationChanged(lastKnownLocation);
+                }catch (NullPointerException ex){
+                    Log.e("Tomek","Last known location is null");
+                    Message message = LocationAzimuthManager.this.azimuthResponseHandler
+                            .obtainMessage(LOCATION_PROVIDER_OFF_ID,null);
+                    LocationAzimuthManager.this.azimuthResponseHandler.sendMessage(message);
+                }
+            }
+        });
 
     }
 
 
     class LocationUpdatesHandlerThread extends HandlerThread{
 
+        private Handler workerHandler;
+
         public LocationUpdatesHandlerThread(String name) {
             super(name);
         }
+
+        public void postTask(Runnable task){
+            workerHandler.post(task);
+        }
+
+        public void prepareHandler(){
+            workerHandler = new Handler(getLooper());
+        }
+
     }
 
     class MyLocationListener implements LocationListener{
 
         @Override
-        public void onLocationChanged(Location location) {
+        public void onLocationChanged(Location location){
             Log.d("Tomek", "Received new location: " + location.getLatitude() + " " + location.getLongitude() +
                     " on thread: " + Long.valueOf(Thread.currentThread().getId()).toString());
 

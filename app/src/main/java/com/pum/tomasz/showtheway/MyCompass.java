@@ -107,7 +107,7 @@ public class MyCompass extends View implements AzimuthChangeListener {
     public void open(){
         Log.d("Tomek", "My compass has been opened");
         geoAzimuthChangeNotifier.registerAzimuthChangeListener(this);
-        locationAzimuthManager.setmAzimuthChangeListener(this);
+        locationAzimuthManager.setAzimuthChangeListener(this);
         locationAzimuthManager.activate();
     }
 
@@ -168,7 +168,6 @@ public class MyCompass extends View implements AzimuthChangeListener {
 
         canvas.drawPath(path, directionVectorPaint);
 
-
     }
 
 
@@ -205,10 +204,6 @@ public class MyCompass extends View implements AzimuthChangeListener {
                 break;
             case ARRIVED:
                 notifyArrived();
-                break;
-            case NEW_DESTINATION:
-                setArrived(false);
-                updateDirection(azimuthData.getAzimuth());
                 break;
             case NULL:
                 setArrived(false);

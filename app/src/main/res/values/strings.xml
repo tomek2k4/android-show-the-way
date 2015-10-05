@@ -7,4 +7,5 @@
     <string name="longitude_hint_string">Set Longitude</string>
     <string name="new_msg_wrong_value_format">Please enter proper signed decimal number</string>
     <string name="arrived_text">You\'ve arrived at your destination</string>
+    <string name="coordinates_out_of_range_msg"><![CDATA[Enter latitude in range of <-90,90> and longitude in range of <-180,180>]]></string>
 </resources>
