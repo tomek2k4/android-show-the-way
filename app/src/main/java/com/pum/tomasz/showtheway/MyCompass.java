@@ -22,11 +22,13 @@ import com.pum.tomasz.showtheway.engine.LocationAzimuthManager;
  */
 public class MyCompass extends View implements AzimuthChangeListener {
 
+
     private Paint circlePaintFilled = new Paint();
     private Paint circlePaintStroke = new Paint();
     private Paint northTextPaint = new Paint();
     private Paint defaultTextPaint = new Paint();
     private Paint directionVectorPaint = new Paint();
+    private Paint scaleTextSizePaint = new Paint();
     private int   canvasHeight;
     private int   canvasWidth;
 
@@ -99,6 +101,8 @@ public class MyCompass extends View implements AzimuthChangeListener {
         directionVectorPaint.setStrokeWidth(2);
         directionVectorPaint.setAntiAlias(true);
 
+        scaleTextSizePaint.setColor(0xFF8F8F8F);
+        scaleTextSizePaint.setTextSize(20);
 
         geoAzimuthChangeNotifier = new GeoAzimuthChangeNotifier(context);
         locationAzimuthManager = new LocationAzimuthManager(context);
@@ -117,7 +121,6 @@ public class MyCompass extends View implements AzimuthChangeListener {
         }
     }
 
-
     public void close(){
         Log.d("Tomek", "My compass has been closed");
         if(geoAzimuthChangeNotifier != null){
@@ -135,13 +138,31 @@ public class MyCompass extends View implements AzimuthChangeListener {
         canvas.drawCircle(x0, y0, circleRadius, circlePaintFilled);
         canvas.drawCircle(x0, y0, circleRadius, circlePaintStroke);
 
-        //Draw Sides texts
-        float deltaAngleWorldSides = 2*(float)Math.PI / 4;
 
+        // Mark sides of world
         canvas.drawText("N", x0 - textSize/2, y0 - circleRadius - textMargin / 2, northTextPaint);
         canvas.drawText("W", (float) (x0 - circleRadius - 1.5 * textMargin), y0 + textSize/2, defaultTextPaint);
         canvas.drawText("E", x0 + circleRadius + textMargin / 2, y0 + textSize / 2, defaultTextPaint);
         canvas.drawText("S", x0 - textSize / 2, (float) (y0 + circleRadius + 1.5 * textMargin), defaultTextPaint);
+
+        //Draw angle scale
+        float delta = (float) (Math.PI/6);
+        float scaleLength = circleRadius /12;
+        float scaleTextSize = 15;
+
+        for (int i=0;i<12;i++){
+            canvas.drawLine((float)( x0 + ((circleRadius-scaleLength) * Math.sin(delta*i))),
+                    (float)(y0 - ((circleRadius-scaleLength) * Math.cos(delta*i))),
+                    (float)( x0 + ((circleRadius) * Math.sin(delta*i))),
+                    (float)(y0 - ((circleRadius) * Math.cos(delta*i))),
+                    circlePaintStroke);
+        }
+
+
+
+
+
+
     }
 
 

@@ -105,6 +105,14 @@ public class MainActivity extends ActionBarActivity implements View.OnTouchListe
         String latString = latitudeEditText.getText().toString();
         String longString = longitudeEditText.getText().toString();
 
+        // prevent error when start typying "-"
+        if("-".equals(latString)){
+            latString = "0";
+        }
+        if("-".equals(longString)){
+            longString = "0";
+        }
+
         //Update destination when any of text is not empty and if one of them changed
         if( (!latString.isEmpty() && !longString.isEmpty()) &&
                 (!latString.equals(prevLatitudeString) || !longString.equals(prevLongitudeString))){
