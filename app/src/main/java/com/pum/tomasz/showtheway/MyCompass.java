@@ -5,12 +5,12 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
+import android.location.Location;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.pum.tomasz.showtheway.data.DestinationLocation;
 import com.pum.tomasz.showtheway.engine.AzimuthChangeListener;
 import com.pum.tomasz.showtheway.data.AzimuthData;
 import com.pum.tomasz.showtheway.engine.GeoAzimuthChangeNotifier;
@@ -111,7 +111,7 @@ public class MyCompass extends View implements AzimuthChangeListener {
         locationAzimuthManager.activate();
     }
 
-    public void setDestinationLocation(DestinationLocation destLocation) {
+    public void setDestinationLocation(Location destLocation) {
         if(locationAzimuthManager!=null){
             locationAzimuthManager.setDestinationLocation(destLocation);
         }
@@ -205,6 +205,10 @@ public class MyCompass extends View implements AzimuthChangeListener {
                 break;
             case ARRIVED:
                 notifyArrived();
+                break;
+            case NEW_DESTINATION:
+                setArrived(false);
+                updateDirection(azimuthData.getAzimuth());
                 break;
             case NULL:
                 setArrived(false);

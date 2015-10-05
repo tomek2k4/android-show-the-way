@@ -13,7 +13,7 @@ import android.util.Log;
 
 import com.pum.tomasz.showtheway.data.AzimuthData;
 import com.pum.tomasz.showtheway.data.AzimuthSourceEnum;
-import com.pum.tomasz.showtheway.data.DestinationLocation;
+
 
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -34,7 +34,7 @@ public class LocationAzimuthManager{
     private LocationUpdatesHandlerThread locationUpdatesHandlerThread = null;
 
     private AzimuthChangeListener mAzimuthChangeListener = null;
-    private DestinationLocation destinationLocation = new DestinationLocation(50f,50f);
+    private Location destinationLocation = null;
     private ReentrantLock lock = new ReentrantLock();
 
 
@@ -97,8 +97,23 @@ public class LocationAzimuthManager{
         }
     };
 
-    public void setDestinationLocation(DestinationLocation destinationLocation) {
-        this.destinationLocation = destinationLocation;
+    public void setDestinationLocation(Location destLocation) {
+
+        Location prevDest =  this.destinationLocation;
+        lock.lock();
+        try{
+            this.destinationLocation = destLocation;
+        }finally {
+            lock.unlock();
+        }
+
+        AzimuthData azimuthData = calculateDestinationAzimuth(locationManager.getLastKnownLocation(LOCATION_PROVIDER),destLocation);
+        azimuthData.setAzimuthSourceEnum(AzimuthSourceEnum.NEW_DESTINATION);
+
+        Message message = LocationAzimuthManager.this.azimuthResponseHandler
+                .obtainMessage(CALCULATED_AZIMUTH_MESSAGE_ID,azimuthData);
+        LocationAzimuthManager.this.azimuthResponseHandler.sendMessage(message);
+
     }
 
 
@@ -128,7 +143,7 @@ public class LocationAzimuthManager{
             }finally {
                 lock.unlock();
             }
-            // since we cannot update the UI from a non-UI thread,
+            // since we shouldn't update the UI from a non-UI thread,
             // we'll send the result to the azimuthResponseHandler (defined above)
             Message message = LocationAzimuthManager.this.azimuthResponseHandler
                     .obtainMessage(CALCULATED_AZIMUTH_MESSAGE_ID,azimuthData);
@@ -153,7 +168,7 @@ public class LocationAzimuthManager{
     }
 
 
-    private AzimuthData calculateDestinationAzimuth(Location currentLocation,DestinationLocation destLocation) {
+    private AzimuthData calculateDestinationAzimuth(Location currentLocation,Location destLocation) {
 
         AzimuthData azimuthData = null;
         float azimuth = 0;

@@ -5,6 +5,7 @@ package com.pum.tomasz.showtheway.data;
  */
 public class AzimuthData {
 
+
     // Source fo azimuth change
     private AzimuthSourceEnum azimuthSourceEnum;
 
@@ -14,6 +15,10 @@ public class AzimuthData {
     public AzimuthData(AzimuthSourceEnum azimuthSourceEnum,float azimuth) {
         this.azimuthSourceEnum = azimuthSourceEnum;
         this.azimuth = azimuth;
+    }
+
+    public void setAzimuthSourceEnum(AzimuthSourceEnum azimuthSourceEnum) {
+        this.azimuthSourceEnum = azimuthSourceEnum;
     }
 
     public AzimuthSourceEnum getAzimuthSourceEnum() {

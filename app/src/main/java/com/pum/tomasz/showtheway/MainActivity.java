@@ -1,5 +1,6 @@
 package com.pum.tomasz.showtheway;
 
+import android.location.Location;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,13 +11,16 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.pum.tomasz.showtheway.data.DestinationLocation;
+import java.security.MessageDigest;
+
 
 public class MainActivity extends ActionBarActivity implements View.OnTouchListener{
 
     private MyCompass compassView;
     private EditText latitudeEditText;
     private EditText longitudeEditText;
+    private String prevLatitudeString;
+    private String prevLongitudeString;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,16 +50,24 @@ public class MainActivity extends ActionBarActivity implements View.OnTouchListe
     public boolean onTouch(View v, MotionEvent event) {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
-                Log.d("Tomek", "On touch event called");
-                try {
-                    float latitude = new Float( latitudeEditText.getText().toString());
-                    float longitude = new Float(longitudeEditText.getText().toString());
-
-                    compassView.setDestinationLocation(new DestinationLocation(latitude,longitude));
-                }catch (NumberFormatException e){
-                    Log.d("Tomek","Wrong value formatting");
-                    Toast.makeText(this, R.string.new_msg_wrong_value_format,
-                            Toast.LENGTH_LONG).show();
+                String latString = latitudeEditText.getText().toString();
+                String longString = longitudeEditText.getText().toString();
+                if(!latString.isEmpty() && !longString.isEmpty() && !latString.equals(prevLatitudeString) && !longString.equals(prevLongitudeString)){
+                    Log.d("Tomek", "Update new destination");
+                    try {
+                        float latitude = new Float(latString);
+                        float longitude = new Float(longString);
+                        Location destLoc = new Location("destination");
+                        destLoc.setLatitude(latitude);
+                        destLoc.setLongitude(longitude);
+                        compassView.setDestinationLocation(destLoc);
+                    }catch (NumberFormatException e){
+                        Log.d("Tomek","Wrong value formatting");
+                        Toast.makeText(this, R.string.new_msg_wrong_value_format,
+                                Toast.LENGTH_LONG).show();
+                    }
+                    prevLatitudeString = latString;
+                    prevLongitudeString = longString;
                 }
                 return true;
             case MotionEvent.ACTION_CANCEL:
