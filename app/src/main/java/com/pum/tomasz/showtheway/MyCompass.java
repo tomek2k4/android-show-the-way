@@ -145,15 +145,24 @@ public class MyCompass extends View implements AzimuthChangeListener {
         canvas.drawText("E", x0 + circleRadius + textMargin / 2, y0 + textSize / 2, defaultTextPaint);
         canvas.drawText("S", x0 - textSize / 2, (float) (y0 + circleRadius + 1.5 * textMargin), defaultTextPaint);
 
+        canvas.drawText("NE", (float)( x0 + (circleRadius * Math.sin(Math.PI/4))),
+                (float)(y0 - (circleRadius * Math.cos(Math.PI/4))- textMargin / 2), defaultTextPaint);
+        canvas.drawText("SE", (float)( x0 + (circleRadius * Math.sin(3*Math.PI/4))+ textMargin / 2),
+                (float)(y0 - (circleRadius * Math.cos(3*Math.PI/4))+ textMargin / 2), defaultTextPaint);
+        canvas.drawText("SW", (float)( x0 + (circleRadius * Math.sin(5*Math.PI/4))-1.5*textMargin),
+                (float)(y0 - (circleRadius * Math.cos(5*Math.PI/4))+1.5*textMargin), defaultTextPaint);
+        canvas.drawText("NW", (float)( x0 + (circleRadius * Math.sin(7*Math.PI/4))-1.5*textMargin),
+                (float)(y0 - (circleRadius * Math.cos(7*Math.PI/4))-textMargin/2), defaultTextPaint);
+
         //Draw angle scale
         float delta = (float) (Math.PI/6);
         float scaleLength = circleRadius /12;
         float scaleTextSize = 15;
 
-        for (int i=0;i<12;i++){
-            canvas.drawLine((float)( x0 + ((circleRadius-scaleLength) * Math.sin(delta*i))),
-                    (float)(y0 - ((circleRadius-scaleLength) * Math.cos(delta*i))),
-                    (float)( x0 + ((circleRadius) * Math.sin(delta*i))),
+        for (int i = 0; i < 12; i++) {
+            canvas.drawLine((float) (x0 + ((circleRadius - scaleLength) * Math.sin(delta * i))),
+                    (float) (y0 - ((circleRadius - scaleLength) * Math.cos(delta * i))),
+                    (float) (x0 + ((circleRadius) * Math.sin(delta * i))),
                     (float)(y0 - ((circleRadius) * Math.cos(delta*i))),
                     circlePaintStroke);
         }
